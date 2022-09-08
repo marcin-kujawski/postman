@@ -1,0 +1,591 @@
+{
+	"info": {
+		"_postman_id": "d5f1d21a-6065-4a34-8666-98ed9bd77967",
+		"name": "Endpoint Configuration",
+		"description": "Typical Use Cases\n\n- A vRA Administrator or a Solution User creates an endpoint category.\n- The vRA administrator registers a new endpoint type with the endpoint configuration service.\n- The IaaS administrator creates, updates or deletes an endpoint through the UI. vRA then calls the endpoint configuration service to create, update or delete endpoint information.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Register endpoint type",
+			"description": "",
+			"item": [
+				{
+					"name": "Login with System User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"tests[\"Response contains auth token\"] = responseBody.has(\"id\");",
+									"postman.clearEnvironmentVariable(\"token\");",
+									"var data = JSON.parse(responseBody);",
+									"tests[\"Auth token is not null\"] = data.id !== \"\";",
+									"postman.setEnvironmentVariable(\"token\", data.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\":\"{{system-user}}\",\"password\":\"{{system-password}}\",\"tenant\":\"{{system-tenant}}\"}"
+						},
+						"url": "https://{{va-fqdn}}/identity/api/tokens",
+						"description": " Returns a token associated with the system user credentials. (e.g. administrator@vsphere.local)"
+					},
+					"response": []
+				},
+				{
+					"name": "Gets paged list of endpoint types",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "https://{{va-fqdn}}/endpoint-configuration-service/api/types?page={{page}}&limit={{limit}}",
+							"protocol": "https",
+							"host": [
+								"{{va-fqdn}}"
+							],
+							"path": [
+								"endpoint-configuration-service",
+								"api",
+								"types"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "{{page}}"
+								},
+								{
+									"key": "limit",
+									"value": "{{limit}}"
+								}
+							]
+						},
+						"description": "The API returns paged list of endpoint types."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Infrastructure category",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"Infrastructure\",\n  \"name\": \"Infrastructure\"\n}"
+						},
+						"url": "https://{{va-fqdn}}/endpoint-configuration-service/api/categories",
+						"description": "The API creates a new endpoint type category. The API validates that the endpoint type category does not exist already, before creating new endpoint type category. \n\nNote: This is only available for system admin."
+					},
+					"response": []
+				},
+				{
+					"name": "Create a Jenkins endpoint type",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"Jenkins\",\n  \"category\": \"Infrastructure\",\n  \"displayName\": \"Jenkins\",\n  \"description\": \"Jenkins endpoint\",\n  \"tenantable\": false,\n  \"tenantId\": null,\n  \"schema\": {\n    \"fields\": [\n      {\n        \"id\": \"password\",\n        \"label\": \"Password\",\n        \"dataType\": {\n          \"type\": \"primitive\",\n          \"typeId\": \"SECURE_STRING\"\n        },\n        \"displayAdvice\": \"TEXTBOX\",\n        \"orderIndex\": 3,\n        \"state\": {\n          \"dependencies\": [],\n          \"facets\": [\n            {\n              \"type\": \"mandatory\",\n              \"value\": {\n                \"type\": \"constant\",\n                \"value\": {\n                  \"type\": \"boolean\",\n                  \"value\": true\n                }\n              }\n            }\n          ]\n        },\n        \"isMultiValued\": false\n      },\n      {\n        \"id\": \"address\",\n        \"label\": \"Address\",\n        \"dataType\": {\n          \"type\": \"primitive\",\n          \"typeId\": \"STRING\"\n        },\n        \"displayAdvice\": \"TEXTBOX\",\n        \"orderIndex\": 1,\n        \"state\": {\n          \"dependencies\": [],\n          \"facets\": [\n            {\n              \"type\": \"mandatory\",\n              \"value\": {\n                \"type\": \"constant\",\n                \"value\": {\n                  \"type\": \"boolean\",\n                  \"value\": true\n                }\n              }\n            },\n            {\n              \"type\": \"nullDisplayText\",\n              \"value\": {\n                \"type\": \"constant\",\n                \"value\": {\n                  \"type\": \"string\",\n                  \"value\": \"https://<host>\"\n                }\n              }\n            }\n          ]\n        },\n        \"isMultiValued\": false\n      },\n      {\n        \"id\": \"username\",\n        \"label\": \"User name\",\n        \"dataType\": {\n          \"type\": \"primitive\",\n          \"typeId\": \"STRING\"\n        },\n        \"displayAdvice\": \"TEXTBOX\",\n        \"orderIndex\": 2,\n        \"state\": {\n          \"dependencies\": [],\n          \"facets\": [\n            {\n              \"type\": \"mandatory\",\n              \"value\": {\n                \"type\": \"constant\",\n                \"value\": {\n                  \"type\": \"boolean\",\n                  \"value\": true\n                }\n              }\n            },\n            {\n              \"type\": \"nullDisplayText\",\n              \"value\": {\n                \"type\": \"constant\",\n                \"value\": {\n                  \"type\": \"string\",\n                  \"value\": \"domain\\\\username\"\n                }\n              }\n            }\n          ]\n        },\n        \"isMultiValued\": false\n      }\n    ]\n  },\n  \"serviceProviderId\": \"\",\n  \"capabilities\": \"\",\n  \"menuItems\": []\n}"
+						},
+						"url": "https://{{va-fqdn}}/endpoint-configuration-service/api/types",
+						"description": "Creates an endpoint type for Jenkins system.\n\nNote: Only system admin or infra admin can create endpoint type."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Create endpoint",
+			"description": "",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"tests[\"Response contains auth token\"] = responseBody.has(\"id\");",
+									"postman.clearEnvironmentVariable(\"token\");",
+									"var data = JSON.parse(responseBody);",
+									"tests[\"Auth token is not null\"] = data.id !== \"\";",
+									"postman.setEnvironmentVariable(\"token\", data.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\":\"{{username}}\",\"password\":\"{{password}}\",\"tenant\":\"{{tenant}}\"}"
+						},
+						"url": "https://{{va-fqdn}}/identity/api/tokens",
+						"description": " Returns a token associated with the provided credentials. e.g. (username@domain)"
+					},
+					"response": []
+				},
+				{
+					"name": "Creates a new vSphere endpoint",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"version\": 0,\n  \"typeId\": \"vSphere\",\n  \"name\": \"{{endpoint-name}}\",\n  \"description\": \"\",\n  \"uri\": \"\",\n  \"tenantId\": null,\n  \"extensionData\": {\n    \"entries\": [\n      {\n        \"key\": \"password\",\n        \"value\": {\n          \"type\": \"secureString\",\n          \"value\": \"{{password}}\"\n        }\n      },\n      {\n        \"key\": \"address\",\n        \"value\": {\n          \"type\": \"string\",\n          \"value\": \"{{https://host/sdk}}\"\n        }\n      },\n      {\n        \"key\": \"username\",\n        \"value\": {\n          \"type\": \"string\",\n          \"value\": \"{{domain\\\\username}}\"\n        }\n      },\n      {\n        \"key\": \"trustThumbprint\",\n        \"value\": {\n          \"type\": \"string\",\n          \"value\": \"{{thumbprint}}\"\n        }\n      }\n    ]\n  },\n  \"associations\": []\n}"
+						},
+						"url": "https://{{va-fqdn}}/endpoint-configuration-service/api/endpoints"
+					},
+					"response": []
+				},
+				{
+					"name": "Gets vSphere to NSX association Type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"var content = jsonData.content;",
+									"tests[\"association found\"] = content.length === 1;",
+									"",
+									"postman.setEnvironmentVariable(\"vSphere_nsx_association_type_id\", content[0].id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "https://{{va-fqdn}}/endpoint-configuration-service/api/associationtypes?$filter=fromType eq 'vSphere'",
+							"protocol": "https",
+							"host": [
+								"{{va-fqdn}}"
+							],
+							"path": [
+								"endpoint-configuration-service",
+								"api",
+								"associationtypes"
+							],
+							"query": [
+								{
+									"key": "$filter",
+									"value": "fromType eq 'vSphere'"
+								}
+							]
+						},
+						"description": "The API returns vSphere to NSX association type. Make note of the \"id\" field which will be required in creating NSX endpoint."
+					},
+					"response": []
+				},
+				{
+					"name": "Creates a NSX endpoint (associate with vSphere)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"version\": 0,\n  \"typeId\": \"NSX\",\n  \"name\": \"{{nsx-endpoint-name}}\",\n  \"description\": \"\",\n  \"uri\": \"\",\n  \"tenantId\": null,\n  \"extensionData\": {\n    \"entries\": [\n      {\n        \"key\": \"password\",\n        \"value\": {\n          \"type\": \"secureString\",\n          \"value\": \"{{password}}\"\n        }\n      },\n      {\n        \"key\": \"address\",\n        \"value\": {\n          \"type\": \"string\",\n          \"value\": \"{{https://nsx-manager}}\"\n        }\n      },\n      {\n        \"key\": \"username\",\n        \"value\": {\n          \"type\": \"string\",\n          \"value\": \"{{username}}\"\n        }\n      },\n      {\n        \"key\": \"trustThumbprint\",\n        \"value\": {\n          \"type\": \"string\",\n          \"value\": \"{{thumbprint}}\"\n        }\n      }\n    ]\n  },\n  \"associations\": [\n    {\n      \"associationTypeInfoId\": \"{{vSphere_nsx_association_type_id}}\",\n      \"customProperties\": null,\n      \"toEndpointId\": \"{{vsphere_endpoint_id}}\"\n    }\n  ]\n}"
+						},
+						"url": "https://{{va-fqdn}}/endpoint-configuration-service/api/endpoints",
+						"description": "Create a NSX endpoint and associating it with vSphere endpoint."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Edit endpoint",
+			"description": "",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"tests[\"Response contains auth token\"] = responseBody.has(\"id\");",
+									"postman.clearEnvironmentVariable(\"token\");",
+									"var data = JSON.parse(responseBody);",
+									"tests[\"Auth token is not null\"] = data.id !== \"\";",
+									"postman.setEnvironmentVariable(\"token\", data.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\":\"{{username}}\",\"password\":\"{{password}}\",\"tenant\":\"{{tenant}}\"}"
+						},
+						"url": "https://{{va-fqdn}}/identity/api/tokens",
+						"description": " Returns a token associated with the provided credentials. e.g. (username@domain)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get endpoint by id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {},
+						"url": "https://{{va-fqdn}}/endpoint-configuration-service/api/endpoints/{{endpoint-id}}",
+						"description": "The API returns paged list of endpoints."
+					},
+					"response": []
+				},
+				{
+					"name": "Edit a basic vSphere endpoint",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"{{endpoint-id}}\",\n    \"typeId\": \"vSphere\",\n    \"typeDisplayName\": \"vSphere (vCenter)\",\n    \"name\": \"{{endpoint-name}}\",\n    \"description\": \"updating endpoint from API\",\n    \"uri\": \"\",\n    \"tenantId\": null,\n    \"extensionData\": {\n        \"entries\": [\n            {\n                \"key\": \"password\",\n                \"value\": {\n                    \"type\": \"secureString\",\n                    \"value\": \"{{endpoint-credential-password}}\"\n                }\n            },\n            {\n                \"key\": \"address\",\n                \"value\": {\n                    \"type\": \"string\",\n                    \"value\": \"{{endpoint-url}}\"\n                }\n            },\n            {\n                \"key\": \"integratedCredentials\",\n                \"value\": {\n                    \"type\": \"boolean\",\n                    \"value\": false\n                }\n            },\n            {\n                \"key\": \"trustThumbprint\",\n                \"value\": {\n                    \"type\": \"string\",\n                    \"value\": \"{{endpoint-thumbprint}}\"\n                }\n            },\n            {\n                \"key\": \"username\",\n                \"value\": {\n                    \"type\": \"string\",\n                    \"value\": \"{{endpoint-credential-username}}\"\n                }\n            }\n        ]\n    },\n    \"associations\": []\n}"
+						},
+						"url": "https://{{va-fqdn}}/endpoint-configuration-service/api/endpoints/{{endpoint-id}}",
+						"description": "The API returns paged list of endpoints."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Automate vCenter endpoint (with certificates)",
+			"description": "",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"tests[\"Response contains auth token\"] = responseBody.has(\"id\");",
+									"postman.clearEnvironmentVariable(\"token\");",
+									"var data = JSON.parse(responseBody);",
+									"tests[\"Auth token is not null\"] = data.id !== \"\";",
+									"postman.setEnvironmentVariable(\"token\", data.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\":\"{{username}}\",\"password\":\"{{password}}\",\"tenant\":\"{{tenant}}\"}"
+						},
+						"url": "https://{{va-fqdn}}/identity/api/tokens",
+						"description": " Returns a token associated with the provided credentials. e.g. (username@domain)"
+					},
+					"response": []
+				},
+				{
+					"name": "Validate a vSphere endpoint",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0bd74769-a83d-4a2d-bc92-cbfe4eff1925",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.environment.set(\"thumbprint\", jsonData.certificateInfo.thumbprint);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"typeId\": \"vSphere\",\n  \"name\": \"{{endpoint-name}}\",\n  \"description\": \"\",\n  \"uri\": \"\",\n  \"tenantId\": null,\n  \"extensionData\": {\n    \"entries\": [\n      {\n        \"key\": \"password\",\n        \"value\": {\n          \"type\": \"secureString\",\n          \"value\": \"{{password}}\"\n        }\n      },\n      {\n        \"key\": \"address\",\n        \"value\": {\n          \"type\": \"string\",\n          \"value\": \"{{https://hostname/sdk}}\"\n        }\n      },\n      {\n        \"key\": \"username\",\n        \"value\": {\n          \"type\": \"string\",\n          \"value\": \"{{Domain\\\\Username}}\"\n        }\n      }\n    ]\n  },\n  \"associations\": []\n}"
+						},
+						"url": "https://{{va-fqdn}}/endpoint-configuration-service/api/endpoints/validate",
+						"description": "This should return an INVALID_CERTIFICATE status with thumbprint"
+					},
+					"response": []
+				},
+				{
+					"name": "Creates a new vSphere endpoint",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"typeId\": \"vSphere\",\n  \"name\": \"{{endpoint-name}}\",\n  \"description\": \"Created from postman\",\n  \"uri\": \"\",\n  \"tenantId\": null,\n  \"extensionData\": {\n    \"entries\": [\n      {\n        \"key\": \"password\",\n        \"value\": {\n          \"type\": \"secureString\",\n          \"value\": \"{{password}}\"\n        }\n      },\n      {\n        \"key\": \"address\",\n        \"value\": {\n          \"type\": \"string\",\n          \"value\": \"{{https://hostname/sdk}}\"\n        }\n      },\n      {\n        \"key\": \"username\",\n        \"value\": {\n          \"type\": \"string\",\n          \"value\": \"{{Domain\\\\Username}}\"\n        }\n      },\n      {\n        \"key\": \"trustThumbprint\",\n        \"value\": {\n          \"type\": \"string\",\n          \"value\": \"{{thumbprint}}\"\n        }\n      }\n    ]\n  },\n  \"associations\": []\n}"
+						},
+						"url": "https://{{va-fqdn}}/endpoint-configuration-service/api/endpoints"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Gets paged list of endpoints",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "https://{{va-fqdn}}/endpoint-configuration-service/api/endpoints?secureFields=false&page={{page}}&limit={{limit}}",
+					"protocol": "https",
+					"host": [
+						"{{va-fqdn}}"
+					],
+					"path": [
+						"endpoint-configuration-service",
+						"api",
+						"endpoints"
+					],
+					"query": [
+						{
+							"key": "secureFields",
+							"value": "false"
+						},
+						{
+							"key": "page",
+							"value": "{{page}}"
+						},
+						{
+							"key": "limit",
+							"value": "{{limit}}"
+						}
+					]
+				},
+				"description": "The API returns paged list of endpoints."
+			},
+			"response": []
+		},
+		{
+			"name": "Gets vSphere endpoints by type",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "https://{{va-fqdn}}/endpoint-configuration-service/api/types/vSphere/endpoints?page={{page}}&limit={{limit}}",
+					"protocol": "https",
+					"host": [
+						"{{va-fqdn}}"
+					],
+					"path": [
+						"endpoint-configuration-service",
+						"api",
+						"types",
+						"vSphere",
+						"endpoints"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "{{page}}"
+						},
+						{
+							"key": "limit",
+							"value": "{{limit}}"
+						}
+					]
+				},
+				"description": "The API returns paged list of endpoints."
+			},
+			"response": []
+		}
+	]
+}
